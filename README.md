@@ -5,3 +5,4 @@ Project members:
 - AJ Fong
 - Angelica Babei
 - Coco (Xiaoyu) Huang
+- Deependra Singh
