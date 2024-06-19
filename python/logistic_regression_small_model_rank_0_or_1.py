@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
 # Load the dataframe
-df = pd.read_csv("/Users/angelicababei/ml_rnt/data_files/ecq_rank_0_or_1_cond_limit_5000_one_per_isog_class_balanced.csv")
+df = pd.read_csv("../data_files/ecq_rank_0_or_1_cond_limit_5000_one_per_isog_class_balanced.csv")
 # Print the first few rows of the dataframe
 print(df.head())
 
