@@ -29,7 +29,9 @@ X = df.drop(columns=['rank']).values.astype(np.float32)
 y = df['rank'].values.astype(np.float32)
 
 # Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
+
 
 print("The training set has ", X_train.shape[0], " examples.")
 print("The test set has ", X_test.shape[0], " examples.")
@@ -39,7 +41,7 @@ primes_strings = column_names[:-1]
 primes = [int(primes_strings[i]) for i in range(len(primes_strings))]
 def scale_by_ap(data_set):
     scaling_factor = [1/(2*np.sqrt(primes[i])) for i in range(len(primes))]
-    scaling_factor = np.array(scaling_factor)
+    scaling_factor = np.array(scaling_factor, dtype=np.float32)
     return data_set * scaling_factor
 
 # scaler = StandardScaler()
