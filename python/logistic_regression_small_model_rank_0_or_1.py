@@ -35,7 +35,13 @@ print("The training set has ", X_train.shape[0], " examples.")
 print("The test set has ", X_test.shape[0], " examples.")
 
 # Scale the features
-scaler = StandardScaler()
+primes_strings = column_names[:-1]
+primes = [int(primes_strings[i]) for i in range(len(primes_strings))]
+def scale_by_ap(data_set):
+    scaling_factor = [1/(2*np.sqrt(primes[i])) for i in range(len(primes))]
+    
+
+# scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
