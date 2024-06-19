@@ -39,11 +39,12 @@ primes_strings = column_names[:-1]
 primes = [int(primes_strings[i]) for i in range(len(primes_strings))]
 def scale_by_ap(data_set):
     scaling_factor = [1/(2*np.sqrt(primes[i])) for i in range(len(primes))]
-    
+    scaling_factor = np.array(scaling_factor)
+    return data_set * scaling_factor
 
 # scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+X_train = scale_by_ap(X_train)
+X_test = scale_by_ap(X_test)
 
 # Convert to PyTorch tensors
 X_train_tensor = torch.tensor(X_train)
