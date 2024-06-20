@@ -1,5 +1,5 @@
 # Ignore OS-specific files
 .DS_Store
 
-# Ignore large data files
-data_files/ecq_B_200_all_one_per_iso.csv
+# Ignore all data files
+data_files/*
