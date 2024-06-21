@@ -2,8 +2,10 @@
 # scikit-learn == 1.1.2
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+
 
 # load the dataset
 def load_data(path):
@@ -18,7 +20,7 @@ def sliced_data(df, lower_bound, upper_bound):
 
 def getRes(sliced_df, model, metric, test_ratio, shuffle):
     '''
-    This function takes a the sliced dataframe and returns the metric result of the model accordingto the number of a_p's (in test data)
+    This function takes a the sliced dataframe and returns the metric result of the model according to the number of a_p's (in test data)
 
     Parameters:
     sliced_df: pd.DataFrame. 
@@ -91,7 +93,7 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
 
     # iterate through the number of a_p's
     tot_n_aps = len(sliced_df.columns) - 2
-    for i in range(step_size, tot_n_aps, step_size):
+    for i in range(step_size, tot_n_aps+step_size, step_size):
         # slice the dataframe to have i a_p's
         # add the conductor column if we are using it
         if if_using_cond == False:
@@ -106,3 +108,61 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
         res_df = pd.concat([res_df, pd.DataFrame({'num_a_p': i, 'accuracy': res}, index = [0])], ignore_index = True)
 
     return res_df
+
+
+def plot_AccByNumAps(res_df, lower_bound, upper_bound):
+    '''
+    This function plots the accuracy by the number of a_p's
+
+    Parameters:
+    res_df: pd.DataFrame.
+        The dataframe containing the number of a_p's and the accuracy
+    '''
+
+    plt.plot(res_df['num_a_p'], res_df['accuracy'])
+    plt.xlabel('Number of a_p\'s')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy by the Number of a_p\'s for conductor range [{}, {}]'.format(lower_bound, upper_bound))
+    plt.show()
+
+
+# def plot_side_by_side(bounds_list, df, model, step_size):
+#     # Initialize subplots
+#     fig, axs = plt.subplots(1, len(bounds_list), figsize=(5 * len(bounds_list), 5), sharey=True)
+    
+#     # Check if there's only one plot to adjust indexing accordingly
+#     if len(bounds_list) == 1:
+#         axs = [axs]
+    
+#     # Iterate through each bounds pair and plot
+#     for idx, bounds in enumerate(bounds_list):
+#         lower_bound, upper_bound = bounds
+#         # Generate the DataFrame
+#         acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size)
+#         # Plot on the respective subplot
+#         axs[idx].plot(acc_df['num_a_p'], acc_df['accuracy'])
+#         axs[idx].set_title(f'Bounds: {lower_bound} to {upper_bound}')
+#         axs[idx].set_xlabel('Number of APs')
+#         if idx == 0:
+#             axs[idx].set_ylabel('Accuracy')
+    
+#     plt.tight_layout()
+#     plt.show()
+
+
+def plot_on_same_graph(bounds_list, df, model, step_size):
+    plt.figure(figsize=(10, 6))  # Initialize the plot with a specified figure size
+    
+    for bounds in bounds_list:
+        lower_bound, upper_bound = bounds
+        # Generate the DataFrame
+        acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size)
+        # Plot on the same graph
+        plt.plot(acc_df['num_a_p'], acc_df['accuracy'], label=f'Bounds: {lower_bound} to {upper_bound}')
+    
+    plt.title('Accuracy by Number of APs for Different Bounds')
+    plt.xlabel('Number of APs')
+    plt.ylabel('Accuracy')
+    plt.legend()  # Show legend to identify the lines
+    plt.tight_layout()
+    plt.show()
