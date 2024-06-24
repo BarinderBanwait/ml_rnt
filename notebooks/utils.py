@@ -87,8 +87,7 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
         # gotta normilize the conductor column since it's too big:
         # log the conductor column first
         # then normalize the conductor column by dividing by the log of max value
-        # sliced_df['conductor'] = np.log(sliced_df['conductor'])/np.log(sliced_df['conductor'].max())
-        sliced_df['conductor'] = np.log(sliced_df['conductor'])
+        sliced_df['conductor'] = np.log(sliced_df['conductor'])/np.log(sliced_df['conductor'].max())
 
     # create a dataframe to store the number of a_p's and the accuracy
     res_df = pd.DataFrame(columns = ['num_a_p', 'accuracy'])
@@ -158,11 +157,9 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     for bounds in bounds_list:
         lower_bound, upper_bound = bounds
         # Generate the DataFrame
-        acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size, if_using_cond = True)
+        acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size)
         # Plot on the same graph
         plt.plot(acc_df['num_a_p'], acc_df['accuracy'], label=f'Bounds: {lower_bound} to {upper_bound}')
-        #acc_df['RollingMean'] = acc_df['accuracy'].rolling(window=5).mean()
-        #plt.plot(acc_df['num_a_p'], acc_df['RollingMean'], label=f'Bounds: {lower_bound} to {upper_bound}')
         
     
     plt.title('Accuracy by Number of APs for Different Bounds')
