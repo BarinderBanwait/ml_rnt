@@ -49,7 +49,6 @@ def getRes(sliced_df, model, metric, test_ratio, shuffle, random_state):
     y_test_pred = model.predict(X_test)
     return metric(y_test, y_test_pred)    
 
-
 def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
     '''
     This function generates a dataframe of the number of a_p's and the accuracy of the model for a given sliced dataframe
@@ -58,9 +57,9 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
     df: pd.DataFrame.
         The dataframe to be sliced
     lower_bound: int. 
-        The lower bound of the number of conductors
+        The lower bound of the value of conductors
     upper_bound: int.
-        The upper bound of the number of conductors
+        The upper bound of the value of conductors
     model: class
         your chosen model to train and test
     step_size: int. 
@@ -115,6 +114,90 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
     return res_df
 
 
+def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selection = "rolling", rolling_jump = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
+    '''
+    This function generates a dataframe of the number of a_p's and the accuracy of the model for a given sliced dataframe
+
+    Parameters:
+    df: pd.DataFrame.
+        The dataframe to be sliced
+    lower_bound: int.
+        The lower bound of the value of conductors
+    upper_bound: int.
+        The upper bound of the value of conductors
+    n_ap: int.
+        The number of a_p's to use as features
+    ap_selection: str.
+        The method to select the a_p's. Default is "rolling".
+        Choices are "rolling", "rolling non-overlapped" and "random".
+        "rolling": selects the first n_ap a_p's, then the next range of n_ap a_p's, etc. 
+            The rolling window will overlap by "rolling_jump" argument amount of a_p's. 
+            e.g. if rolling_jump is 2 and a_ap = 4, then first selection is [a_2, a_7], and next selection is [a_5, a_13], etc.
+        "rolling non-overlapped": selects the first n_ap a_p's, then the next range of n_ap a_p's, etc.
+            e.g. [a_2, a_5], then [a_7, a_13], etc.
+    rolling_jump: int.
+        The amount of a_p's to not overlap in the rolling window. Default is 10.
+    model: class.
+        your chosen model to train and test
+    step_size: int. 
+        The step size to increment the number of a_p's by
+    metric: function. 
+        The metric to use to evaluate the model. Default is accuracy_score.
+    test_ratio: float. 
+        The ratio of the test set size to the training set size. Default is 0.25.
+    if_using_cond: bool. 
+        If True, the model will use the number of conductors as a feature. Default is False.
+    shuffle: bool.
+        If True, the data will be shuffled before splitting into training and testing sets. Default is True.
+    random_state: int.
+        The random seed to use for train test split. Default is 42.
+    '''
+
+    print('*'*50)
+    print(f"Generating the accuracy by the a_p ranges dataframe for curves with condutor range [{lower_bound}, {upper_bound}]..")
+
+    # slice the dataframe accodring to 
+    sliced_df = sliced_data(df, lower_bound, upper_bound)
+    print(f"There are {len(sliced_df)} curves within the conductor range [{lower_bound}, {upper_bound}].")
+
+    # do we want conductors as a feature?
+    if if_using_cond == False:
+        sliced_df = sliced_df.drop(columns = ['conductor'])
+    else:
+        # gotta normilize the conductor column since it's too big:
+        # log the conductor column first
+        # then normalize the conductor column by dividing by the log of max value
+        sliced_df['conductor'] = np.log(sliced_df['conductor'])/np.log(sliced_df['conductor'].max())
+
+    # create a dataframe to store the number of a_p's and the accuracy
+    res_df = pd.DataFrame(columns = ['a_p range', 'performance'])
+
+    # iterate through the number of a_p's
+    # first get the start of a_p ranges
+    tot_n_aps = len(sliced_df.columns) - 2
+    if ap_selection == "rolling":
+        apStart_list = [i for i in range(0, tot_n_aps-n_ap+rolling_jump, rolling_jump)]
+    elif ap_selection == "rolling non-overlapped":
+        apStart_list = [i for i in range(0, tot_n_aps-n_ap+rolling_jump, n_ap)]
+
+    # iterate through the starts of a_p ranges
+    for ap_start in apStart_list:
+        # slice the dataframe to have i a_p's
+        # add the conductor column if we are using it
+        ap_end = min(ap_start + n_ap,tot_n_aps + 1)
+        if if_using_cond == False:
+            cur_df = sliced_df.iloc[:, ap_start:ap_end].join(sliced_df['rank'])
+        else:
+            cur_df = sliced_df.iloc[:, ap_start:ap_end].join(sliced_df[['conductor','rank']])
+
+        # get the metric result of the model within test data
+        res = getRes(cur_df, model, metric, test_ratio, shuffle, random_state)
+
+        # append the metric result to the dataframe
+        res_df = pd.concat([res_df, pd.DataFrame({'a_p range': f"[{ap_start},{ap_end}]", 'performance': res}, index = [0])], ignore_index = True)
+
+    return res_df
+
 def plot_AccByNumAps(res_df, lower_bound, upper_bound):
     '''
     This function plots the accuracy by the number of a_p's
@@ -128,6 +211,21 @@ def plot_AccByNumAps(res_df, lower_bound, upper_bound):
     plt.xlabel('Number of a_p\'s')
     plt.ylabel('Accuracy')
     plt.title('Accuracy by the Number of a_p\'s for conductor range [{}, {}]'.format(lower_bound, upper_bound))
+    plt.show()
+
+def plot_AccByApRange(res_df, lower_bound, upper_bound):
+    '''
+    This function plots the accuracy by the a_p ranges
+
+    Parameters:
+    res_df: pd.DataFrame.
+        The dataframe containing the a_p ranges and the accuracy
+    '''
+
+    plt.plot(res_df['a_p range'], res_df['performance'])
+    plt.xlabel('a_p\' range')
+    plt.ylabel('Performance')
+    plt.title('Accuracy by the a_p ranges for conductor range [{}, {}]'.format(lower_bound, upper_bound))
     plt.show()
 
 
@@ -168,6 +266,18 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     
     plt.title('Accuracy by Number of APs for Different Bounds')
     plt.xlabel('Number of APs')
+    plt.ylabel('Accuracy')
+    plt.legend()  # Show legend to identify the lines
+    plt.tight_layout()
+    plt.show()
+
+def plot_AccuracyByApRange(res_dict):
+    for bounds, acc_df in res_dict.items():
+        lower_bound, upper_bound = bounds
+        plt.plot(acc_df['a_p range'], acc_df['performance'], label=f'Bounds: {lower_bound} to {upper_bound}')      
+            
+    plt.title('Performance by Range of a_p for Different Bounds')
+    plt.xlabel('a_p Range')
     plt.ylabel('Accuracy')
     plt.legend()  # Show legend to identify the lines
     plt.tight_layout()
