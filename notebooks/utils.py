@@ -35,6 +35,7 @@ def getRes(sliced_df, model, metric, test_ratio, shuffle):
     shuffle: bool.
         If True, the data will be shuffled before splitting into training and testing sets.
     '''
+
     X = sliced_df.drop(columns=['rank']).values
     y = sliced_df['rank'].values
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_ratio, shuffle = shuffle)
@@ -86,7 +87,8 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
         # gotta normilize the conductor column since it's too big:
         # log the conductor column first
         # then normalize the conductor column by dividing by the log of max value
-        sliced_df['conductor'] = np.log(sliced_df['conductor'])/np.log(sliced_df['conductor'].max())
+        # sliced_df['conductor'] = np.log(sliced_df['conductor'])/np.log(sliced_df['conductor'].max())
+        sliced_df['conductor'] = np.log(sliced_df['conductor'])
 
     # create a dataframe to store the number of a_p's and the accuracy
     res_df = pd.DataFrame(columns = ['num_a_p', 'accuracy'])
@@ -156,9 +158,12 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     for bounds in bounds_list:
         lower_bound, upper_bound = bounds
         # Generate the DataFrame
-        acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size)
+        acc_df = Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size=step_size, if_using_cond = True)
         # Plot on the same graph
         plt.plot(acc_df['num_a_p'], acc_df['accuracy'], label=f'Bounds: {lower_bound} to {upper_bound}')
+        #acc_df['RollingMean'] = acc_df['accuracy'].rolling(window=5).mean()
+        #plt.plot(acc_df['num_a_p'], acc_df['RollingMean'], label=f'Bounds: {lower_bound} to {upper_bound}')
+        
     
     plt.title('Accuracy by Number of APs for Different Bounds')
     plt.xlabel('Number of APs')
@@ -166,3 +171,23 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     plt.legend()  # Show legend to identify the lines
     plt.tight_layout()
     plt.show()
+
+
+
+def find_min_num_a_p_for_accuracy_thresholds(res_df):
+    accuracy_thresholds = [0.99, 0.98, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7]
+    threshold_to_min_num_a_p = {}
+    
+    for threshold in accuracy_thresholds:
+        # Filter rows where accuracy is greater than or equal to the current threshold
+        filtered_df = res_df[res_df['accuracy'] >= threshold]
+        
+        # Find the minimum 'num_a_p' if any rows meet the condition
+        if not filtered_df.empty:
+            min_num_a_p = filtered_df['num_a_p'].min()
+            threshold_to_min_num_a_p[threshold] = min_num_a_p
+        else:
+            # Assign a default value if no rows meet the condition
+            threshold_to_min_num_a_p[threshold] = np.nan
+    
+    return threshold_to_min_num_a_p
