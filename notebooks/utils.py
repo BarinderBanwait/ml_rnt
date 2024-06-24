@@ -18,7 +18,7 @@ def sliced_data(df, lower_bound, upper_bound):
     # print(f"Sliced the dataset to have curves with conductor witin the range of [{lower_bound}, {upper_bound}]..")
     return df.loc[df['conductor'] >= lower_bound].loc[df['conductor'] <= upper_bound]
 
-def getRes(sliced_df, model, metric, test_ratio, shuffle):
+def getRes(sliced_df, model, metric, test_ratio, shuffle, random_state):
     '''
     This function takes a the sliced dataframe and returns the metric result of the model according to the number of a_p's (in test data)
 
@@ -34,11 +34,13 @@ def getRes(sliced_df, model, metric, test_ratio, shuffle):
     test_ratio: float  
     shuffle: bool.
         If True, the data will be shuffled before splitting into training and testing sets.
+    random_state: int.
+        The random seed to use for train test split.
     '''
 
     X = sliced_df.drop(columns=['rank']).values
     y = sliced_df['rank'].values
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_ratio, shuffle = shuffle)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_ratio, shuffle = shuffle, random_state=random_state)
 
     # train the model
     model.fit(X_train, y_train)
@@ -48,7 +50,7 @@ def getRes(sliced_df, model, metric, test_ratio, shuffle):
     return metric(y_test, y_test_pred)    
 
 
-def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True):
+def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
     '''
     This function generates a dataframe of the number of a_p's and the accuracy of the model for a given sliced dataframe
 
@@ -71,6 +73,8 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
         If True, the model will use the number of conductors as a feature. Default is False.
     shuffle: bool.
         If True, the data will be shuffled before splitting into training and testing sets. Default is True.
+    random_state: int.
+        The random seed to use for train test split. Default is 42.
     '''
 
     print('*'*50)
@@ -103,7 +107,7 @@ def Generate_AccByNumAps_df(df, lower_bound, upper_bound, model, step_size = 10,
             cur_df = sliced_df.iloc[:, :i].join(sliced_df[['conductor','rank']])
 
         # get the metric result of the model within test data
-        res = getRes(cur_df, model, metric, test_ratio, shuffle)
+        res = getRes(cur_df, model, metric, test_ratio, shuffle, random_state)
 
         # append the metric result to the dataframe
         res_df = pd.concat([res_df, pd.DataFrame({'num_a_p': i, 'accuracy': res}, index = [0])], ignore_index = True)
