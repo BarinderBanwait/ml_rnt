@@ -271,7 +271,8 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     plt.tight_layout()
     plt.show()
 
-def plot_AccuracyByApRange(res_dict):
+def plot_AccuracyByApRange(res_dict, size=(12, 6)):
+    plt.figure(figsize=size)
     for bounds, acc_df in res_dict.items():
         lower_bound, upper_bound = bounds
         plt.plot(acc_df['a_p range'], acc_df['performance'], label=f'Bounds: {lower_bound} to {upper_bound}')      
