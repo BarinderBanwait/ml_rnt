@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import plotly.graph_objects as go
 
 # load the dataset
 def load_data(path):
@@ -128,6 +129,38 @@ def plot_AccuracycByNumAps(res_dict, metric_name = 'accuracy', size=(12, 6)):
     plt.legend()  # Show legend to identify the lines
     plt.tight_layout()
     plt.show()
+
+def plot_Heatmap(res_dict, metric_name = 'accuracy', size=(800,800)):
+    bounds_list = list(res_dict.keys())
+
+    # get the x axis of the 3d surface - number of a_p's
+    x = res_dict[bounds_list[0]]['num_a_p']
+    # get the y axis of the 3d surface - end points of bounds
+    y = [bounds[1] for bounds in bounds_list]
+    # get log 2 of the y
+    y = [np.log2(y_val) for y_val in y]
+    # get the z axis of the 3d surface - the metric
+    z = [res_dict[bounds]['performance'] for bounds in bounds_list]
+
+    # if metric_name = matthews_corrcoef, change it to MCC
+    if metric_name == 'matthews_corrcoef':
+        metric_name = 'MCC'
+
+    fig = go.Figure(data=[go.Surface(z=z, x=x, y=y)])
+    fig.update_layout(title=f'{metric_name} by the number of ap\'s and log_2(conductor) upperbound', autosize=False,
+                    width=500, height=500,
+                    margin=dict(l=65, r=50, b=65, t=90))
+    # change the size of fig
+    fig.update_layout(width=size[0], height=size[1])
+
+    # change fig axis labels
+    fig.update_layout(scene = dict(
+                        xaxis_title='Number of a_p\'s',
+                        yaxis_title='Log_2(Conductor) upperbound',
+                        zaxis_title= metric_name),
+                        )
+
+    fig.show()
 
 def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selection = "rolling", rolling_jump = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
     '''
