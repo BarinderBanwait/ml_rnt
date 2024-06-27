@@ -160,7 +160,7 @@ def plot_Heatmap(res_dict, metric_name = 'accuracy', size=(800,800)):
                         zaxis_title= metric_name),
                         )
 
-    fig.show()
+    return fig
 
 def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selection = "rolling", rolling_jump = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
     '''
