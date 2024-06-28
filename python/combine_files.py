@@ -5,7 +5,10 @@ dir = r"..\data_files\1000_aps"
 # get all files in the directory
 files = os.listdir(dir)
 # delete any previous combined file
-files.remove("ecq_B_1000_all_one_per_iso_all.parquet")
+try:
+    files.remove("ecq_B_1000_all_one_per_iso_all.parquet")
+except:
+    pass
 
 # initiate an empty dataframe
 df = pd.DataFrame()
