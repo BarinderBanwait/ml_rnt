@@ -162,7 +162,7 @@ def plot_Heatmap(res_dict, metric_name = 'accuracy', size=(800,800)):
 
     return fig
 
-def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selection = "rolling", rolling_jump = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
+def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selection = "rolling", stride = 10, metric = accuracy_score, test_ratio = 0.25, if_using_cond = False, shuffle = True, random_state = 42):
     '''
     This function generates a dataframe of the number of a_p's and the accuracy of the model for a given sliced dataframe
 
@@ -224,9 +224,9 @@ def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selec
     # first get the start of a_p ranges
     tot_n_aps = len(sliced_df.columns) - 2
     if ap_selection == "rolling":
-        apStart_list = [i for i in range(0, tot_n_aps-n_ap+rolling_jump, rolling_jump)]
+        apStart_list = [i for i in range(0, tot_n_aps-n_ap+stride, stride)]
     elif ap_selection == "rolling non-overlapped":
-        apStart_list = [i for i in range(0, tot_n_aps-n_ap+rolling_jump, n_ap)]
+        apStart_list = [i for i in range(0, tot_n_aps-n_ap+stride, n_ap)]
 
     # iterate through the starts of a_p ranges
     for ap_start in apStart_list:
@@ -246,7 +246,7 @@ def Generate_AccByApRange_df(df, lower_bound, upper_bound, model, n_ap, ap_selec
 
     return res_df
 
-def plot_AccuracyByApRange(res_dict,  metric_name = 'accuracy', size=(12, 6)):
+def plot_AccuracyByApRange(res_dict,  metric_name = 'Accuracy', size=(12, 6)):
     plt.figure(figsize=size)
     for bounds, acc_df in res_dict.items():
         lower_bound, upper_bound = bounds
@@ -256,7 +256,7 @@ def plot_AccuracyByApRange(res_dict,  metric_name = 'accuracy', size=(12, 6)):
     if metric_name == 'matthews_corrcoef':
         metric_name = 'MCC'  
             
-    plt.title('{} by Range of a_p for Different Bounds'.format(metric_name))
+    plt.title('{} by Range of ap\'s for Different Conductor Bounds'.format(metric_name))
     plt.xlabel('a_p Range')
     plt.ylabel(metric_name)
     plt.legend()  # Show legend to identify the lines
