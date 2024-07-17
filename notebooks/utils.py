@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import plotly.graph_objects as go
+import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 # load the dataset
 def load_data(path):
@@ -13,6 +15,66 @@ def load_data(path):
     print(f"Loaded the big dataset with {len(df.columns) - 2} a_p's and {len(df)} curves..")
     return df
 
+# convert the rank column to binary accodint to a threshold
+def convert_rank_to_binary(df, threshold):
+    df['rank'] = df['rank'].apply(lambda x: 1 if x > threshold else 0)
+    print(f'Converted the rank column to binary. The value of 1 means the rank is greater than {threshold}, otherwise 0. Rank counts:')
+    print(df['rank'].value_counts().to_frame().rename(columns={'rank': 'count'}))
+    return df
+
+def get_input_output_dim(df):
+    in_dim = len(df.columns) - 1
+    out_dim = df['rank'].nunique()
+    print(f'The input dimension is {in_dim} and the output dimension is {out_dim}.')
+    return in_dim, out_dim
+
+# returns cuda if we have cuda available, otherwise return cpu
+def get_device():
+    '''
+    Check if we have cuda available. Return cuda version if available
+    '''
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print('Device: {}.'.format(device))
+    return device
+
+# print model summary including architecture and number of parameters
+def model_summary(model):
+    '''
+    Print the model architecture and number of parameters
+    '''
+    print(f'The model has {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters..')
+    print(model)
+
+# split the data into training and test sets and use dataloaders to create batches
+def prepare_data(data, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True):
+    X = data.drop(columns=['rank']).values
+    y = data['rank'].values
+    X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
+    y_tensor = torch.tensor(y, dtype=torch.long).to(device)
+
+    # Split the data into training, validation and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X_tensor, y_tensor, test_size=test_size, random_state=random_state)
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    # Create datasets and dataloaders
+    train_dataset = TensorDataset(X_train, y_train)
+    val_dataset = TensorDataset(X_val, y_val)
+    test_dataset = TensorDataset(X_test, y_test)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+    return train_dataloader, val_dataset, test_dataset
+
+
+def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6)):
+    plt.figure(figsize=size)
+    plt.plot(train_eval_hist, label='train evaluation')
+    plt.plot(val_eval_hist, label='validation evaluation')
+    plt.xlabel('Epochs')
+    plt.ylabel('Evaluation Metric')
+    plt.title('Evaluation Metric by Epochs')
+    plt.legend()  # Show legend to identify the lines
+    plt.show()
+    
 def sliced_data(df, lower_bound, upper_bound):
     # slice the dataset by the desired lowerbound and upperbound of conductors
     # print(f"Sliced the dataset to have curves with conductor witin the range of [{lower_bound}, {upper_bound}]..")
