@@ -22,9 +22,9 @@ def convert_rank_to_binary(df, threshold):
     print(df['rank'].value_counts().to_frame().rename(columns={'rank': 'count'}))
     return df
 
-def get_input_output_dim(df):
+def get_input_output_dim(df, label_col):
     in_dim = len(df.columns) - 1
-    out_dim = df['rank'].nunique()
+    out_dim = df[label_col].nunique()
     print(f'The input dimension is {in_dim} and the output dimension is {out_dim}.')
     return in_dim, out_dim
 
