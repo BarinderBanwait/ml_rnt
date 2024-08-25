@@ -8,11 +8,12 @@ from sklearn.metrics import accuracy_score
 import plotly.graph_objects as go
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.metrics import accuracy_score
 
 # load the dataset
 def load_data(path):
     df = pd.read_parquet(path)
-    print(f"Loaded the big dataset with {len(df.columns) - 2} a_p's and {len(df)} curves..")
+    print(f"Loaded the dataset with {len(df.columns) - 1} features and {len(df)} curves..")
     return df
 
 # convert the rank column to binary accodint to a threshold
@@ -22,9 +23,12 @@ def convert_rank_to_binary(df, threshold):
     print(df['rank'].value_counts().to_frame().rename(columns={'rank': 'count'}))
     return df
 
-def get_input_output_dim(df, label_col):
+def get_input_output_dim(df, label_col, if_regression = False):
     in_dim = len(df.columns) - 1
-    out_dim = df[label_col].nunique()
+    if if_regression == True:
+        out_dim = 1
+    else:
+        out_dim = df[label_col].nunique()
     print(f'The input dimension is {in_dim} and the output dimension is {out_dim}.')
     return in_dim, out_dim
 
@@ -45,12 +49,38 @@ def model_summary(model):
     print(f'The model has {sum(p.numel() for p in model.parameters() if p.requires_grad):,} trainable parameters..')
     print(model)
 
+# round to the nearest perfect square
+def round_to_nearest_square(y):
+    if y <= 0:
+        return 1
+    lower = min(1,torch.floor(torch.sqrt(y)))**2
+    upper = torch.ceil(torch.sqrt(y))**2
+    if y - lower <= upper - y:
+        return lower
+    else:
+        return upper
+    
+def array_round_to_nearest_square(arr):
+    for i,y in enumerate(arr):
+        arr[i] = round_to_nearest_square(y)
+    return arr
+
+# define an accuracy_score function to evaluate the model:
+# step 1 : round y_pred to the nearest perfect square
+# step 2 : calculate the accuracy score
+def perfect_square_acc(y_true, y_pred):
+    y_pred = array_round_to_nearest_square(y_pred)
+    return accuracy_score(y_true, y_pred)
+
 # split the data into training and test sets and use dataloaders to create batches
-def prepare_data(data, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True):
-    X = data.drop(columns=['rank']).values
-    y = data['rank'].values
+def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False):
+    X = data.drop(columns=[label_col]).values
+    y = data[label_col].values
     X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
-    y_tensor = torch.tensor(y, dtype=torch.long).to(device)
+    if if_regression == True:
+        y_tensor = torch.tensor(y, dtype=torch.float32).to(device)
+    else:
+        y_tensor = torch.tensor(y, dtype=torch.long).to(device)
 
     # Split the data into training, validation and test sets
     X_train, X_test, y_train, y_test = train_test_split(X_tensor, y_tensor, test_size=test_size, random_state=random_state)
@@ -63,7 +93,6 @@ def prepare_data(data, device, test_size=0.2, batch_size=32, random_state=42, sh
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     return train_dataloader, val_dataset, test_dataset
-
 
 def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6)):
     plt.figure(figsize=size)
@@ -382,3 +411,39 @@ def plot_on_same_graph(bounds_list, df, model, step_size):
     plt.legend()  # Show legend to identify the lines
     plt.tight_layout()
     plt.show()
+
+# convert PARI Kodaira symbol encoding: disregard n in I_n and I_n* 
+def normalise_kodaira_symbol(ks_list):
+    output = []
+    for ks in ks_list:
+        # if the Kodaira symbol is I_n or I_n*, we can disregard the n
+        if ks >= 5:
+            output.append(5)    # Kodaira symbol I_n: multiplicative reduction with ν(j) = -n
+        elif ks <= -5:
+            output.append(-5)   # Kodaira symbol I_n*: potential multiplicative reduction with ν(j) = -n
+        else:
+            output.append(ks)   # potential good reduction
+    return output
+
+# process the kodaira symbol column to normalise the values
+# we convert PARI Kodaira symbol encoding to disregard the n in I_n and I_n* 
+def process_kodaira_symbol(df):
+    # Step 0: disregard n in I_n and I_n*
+    df['kodaira_symbols'] = df['kodaira_symbols'].apply(normalise_kodaira_symbol).apply(np.unique)
+    # double check if any good reudction data is there
+    contains_1 = df['kodaira_symbols'].apply(lambda x: 1 in x)
+    if contains_1.any():
+        print(f"Found curves with Kodaira symbol I_1 in the dataset. The number of curves with good reduction is {contains_1.sum()}. Please double check your dataset.")
+        return 
+    # Step 1: Split the lists into separate rows
+    df_split = df['kodaira_symbols'].apply(pd.Series)
+    # Step 2: Stack the DataFrame to get a Series with a MultiIndex
+    df_split = df_split.stack()
+    # Step 3: Perform one-hot encoding
+    df_dummies = pd.get_dummies(df_split, prefix='kodaira')
+    # Step 4: Sum the DataFrame level-wise
+    df_dummies = df_dummies.sum(level=0)
+    # Step 5: Join the original DataFrame with the one-hot encoded DataFrame
+    df = df.join(df_dummies)
+    df.drop('kodaira_symbols', axis=1, inplace=True)
+    return df

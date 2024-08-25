@@ -35,4 +35,3 @@ class VanillaNN(nn.Module):
         x = self.layers[-1](x)
         return x
     
-    
