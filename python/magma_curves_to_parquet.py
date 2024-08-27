@@ -4,6 +4,7 @@ This script reads a JSON file containing elliptic curve data and converts it
 to a parquet file. The JSON file contains a list of elliptic curve data, where 
 each curve is represented as a list of coefficients 
 [a1, a2, a3, a4, a6, conductor, rank]. 
+
 The script reads the JSON file, computes the normalized a_p values for the 
 first B primes (B being a parameter), and saves the data to a parquet file.
 
