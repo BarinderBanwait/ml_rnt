@@ -30,12 +30,15 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
     train_eval_hist = []
     val_eval_hist = []
 
-    # Instantiate the model to train
-    model.train()
+    # # Instantiate the model to train
+    # model.train()
 
     best_val_eval = float('-inf')
     best_epoch = 0
     for epoch in range(num_epochs):
+        # Instantiate the model to train
+        model.train()
+
         for inputs, labels in train_dataloader:
             # Forward pass
             outputs = model(inputs)

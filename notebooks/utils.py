@@ -61,9 +61,10 @@ def round_to_nearest_square(y):
         return upper
     
 def array_round_to_nearest_square(arr):
+    rounded_arr = torch.zeros_like(arr)
     for i,y in enumerate(arr):
-        arr[i] = round_to_nearest_square(y)
-    return arr
+        rounded_arr[i] = round_to_nearest_square(y)
+    return rounded_arr
 
 # define an accuracy_score function to evaluate the model:
 # step 1 : round y_pred to the nearest perfect square
