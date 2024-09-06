@@ -1,11 +1,11 @@
 """magma_curves_to_parquet.py
 
-This script reads a JSON file containing elliptic curve data and converts it 
-to a parquet file. The JSON file contains a list of elliptic curve data, where 
-each curve is represented as a list of coefficients 
-[a1, a2, a3, a4, a6, conductor, rank]. 
+This script reads a JSON file containing elliptic curve data and converts it
+to a parquet file. The JSON file contains a list of elliptic curve data, where
+each curve is represented as a list of coefficients
+[a1, a2, a3, a4, a6, conductor, rank].
 
-The script reads the JSON file, computes the normalized a_p values for the 
+The script reads the JSON file, computes the normalized a_p values for the
 first B primes (B being a parameter), and saves the data to a parquet file.
 
 To use this script, run the following from the top level of the repository:
@@ -23,14 +23,14 @@ import numpy as np
 from sage.all import EllipticCurve, primes_first_n, round
 
 # Step 1: Define the constants
-INPUT_FILE = 'data_files/rank47v2.txt'
-OUTPUT_FILE = 'data_files/rank47v2.parquet'
+INPUT_FILE = 'data_files/e6cond30.txt'
+OUTPUT_FILE = 'data_files/e6cond30.parquet'
 NUM_DECIMAL_PLACES = 4  # Number of decimal places to round normalized a_p values to
-NUM_AP_VALS = 10  # Number of primes to use for the a_p values
+NUM_AP_VALS = 1000  # Number of primes to use for the a_p values
 OUTPUT_COLS = [str(p) for p in primes_first_n(NUM_AP_VALS)] + ['conductor', 'rank']
 
 # Step 2: Open the file
-with open('data_files/rank47v2.txt', 'r') as f:
+with open(INPUT_FILE, 'r') as f:
     # Step 3: Use json.load() to read the file
     data = json.load(f)
 
