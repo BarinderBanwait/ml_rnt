@@ -21,7 +21,7 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
     optimizer: torch.optim.Optimizer
         The optimizer to use
     num_epochs: int
-        The number of epochs to train
+        The number of epochs to train 
     if_regression: bool
         Whether it is a regression problem. If True, the output will be squeezed to 1 dimension
     verbose: bool
@@ -45,7 +45,7 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
             if if_regression == True:
                 outputs = outputs.squeeze()
             loss = loss_func(outputs, labels)
-
+            
             # Backward and optimize
             optimizer.zero_grad()
             loss.backward()

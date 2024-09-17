@@ -74,7 +74,7 @@ def perfect_square_acc(y_true, y_pred):
     return accuracy_score(y_true, y_pred)
 
 # split the data into training and test sets and use dataloaders to create batches
-def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False):
+def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False, drop_last=True):
     X = data.drop(columns=[label_col]).values
     y = data[label_col].values
     X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
@@ -91,7 +91,7 @@ def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_s
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last = drop_last)
 
     return train_dataloader, val_dataset, test_dataset
 
