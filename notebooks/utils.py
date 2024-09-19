@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
 
 # load the dataset
 def load_data(path):
@@ -74,7 +75,7 @@ def perfect_square_acc(y_true, y_pred):
     return accuracy_score(y_true, y_pred)
 
 # split the data into training and test sets and use dataloaders to create batches
-def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False, drop_last=True):
+def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False, drop_last=True, if_standardize = False):
     X = data.drop(columns=[label_col]).values
     y = data[label_col].values
     X_tensor = torch.tensor(X, dtype=torch.float32).to(device)
@@ -86,6 +87,13 @@ def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_s
     # Split the data into training, validation and test sets
     X_train, X_test, y_train, y_test = train_test_split(X_tensor, y_tensor, test_size=test_size, random_state=random_state)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    # # standardize the data
+    if if_standardize:
+        scaler = StandardScaler()
+        X_train = torch.tensor(scaler.fit_transform(X_train.cpu()), dtype=torch.float32).to(device) # learn the mean and std from the training set
+        X_test = torch.tensor(scaler.transform(X_test.cpu()), dtype=torch.float32).to(device)   # apply the mean and std to the test set
+        X_val = torch.tensor(scaler.transform(X_val.cpu()), dtype=torch.float32).to(device)  # apply the mean and std to the test set
 
     # Create datasets and dataloaders
     train_dataset = TensorDataset(X_train, y_train)
