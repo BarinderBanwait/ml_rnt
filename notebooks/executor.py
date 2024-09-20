@@ -27,13 +27,31 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
     verbose: bool
         Whether to print the training and validation evaluation after each epoch
     '''
+    train_loss_hist = []
+    val_loss_hist = []
     train_eval_hist = []
     val_eval_hist = []
+
+    # give the loss function a name
+    try:
+        loss_func_name = loss_func.__name__
+    except AttributeError:
+        loss_func_name = loss_func.__class__.__name__
+    except:
+        loss_func_name = 'loss'
+
+    # give the evaluator function a name
+    try:
+        evaluator_name = evaluator.__name__
+    except AttributeError:
+        evaluator_name = evaluator.__class__.__name__
+    except:
+        evaluator_name = 'evaluator'
 
     # # Instantiate the model to train
     # model.train()
 
-    best_val_eval = float('-inf')
+    best_loss = float('inf')
     best_epoch = 0
     for epoch in range(num_epochs):
         # Instantiate the model to train
@@ -51,23 +69,37 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
             loss.backward()
             optimizer.step()
         
-        # print each epoch training and validation loss
+        # print each epoch training loss, evaluation and validation evaluation
+        # training loss
+        outputs = model(train_dataloader.dataset.tensors[0])
+        if if_regression == True:
+            outputs = outputs.squeeze()
+        train_loss = loss_func(outputs, train_dataloader.dataset.tensors[1]).item()
+        train_loss_hist.append(train_loss)
+        # validation loss
+        outputs = model(val_dataset.tensors[0])
+        if if_regression == True:
+            outputs = outputs.squeeze()
+        val_loss = loss_func(outputs, val_dataset.tensors[1]).item()
+        val_loss_hist.append(val_loss)
+        # evaluation
         train_eval = test(model, train_dataloader.dataset, evaluator, if_regression = if_regression)
         val_eval = test(model, val_dataset, evaluator, if_regression = if_regression)
-        if val_eval > best_val_eval:
-            best_val_eval = val_eval
+        # ge the best model
+        if val_loss < best_loss:
+            best_loss = val_loss
             best_model = copy.deepcopy(model)
             best_epoch = epoch
         if verbose == True:
-            print(f'Epoch {epoch+1}/{num_epochs}, Training {evaluator.__name__}: {train_eval}, Validation {evaluator.__name__}: {val_eval}')
+            print(f'Epoch {epoch+1}/{num_epochs}. Training {loss_func_name} : {train_loss:0.4f}, Validation {loss_func_name} : {val_loss:0.4f}. Training {evaluator_name}: {train_eval:0.4f}, Validation {evaluator_name}: {val_eval:0.4f}')
         train_eval_hist.append(train_eval)
         val_eval_hist.append(val_eval)
 
     # save the trained model locally
     model_path = Path("..") / "trained_models" / "model.pth"
-    print(f'Save the model from epoch {best_epoch} with {evaluator.__name__} {best_val_eval} to {model_path}')
+    print(f'Save the model from epoch {best_epoch} with Training {loss_func_name} : {train_loss_hist[best_epoch]:0.4f}, Validation {loss_func_name} : {val_loss_hist[best_epoch]:0.4f}. Training {evaluator_name} : {train_eval_hist[best_epoch]:0.4f}, Validation {evaluator_name} : {val_eval_hist[best_epoch]:0.4f}, to {model_path}.')
     torch.save(best_model, model_path)  
-    return best_model, train_eval_hist, val_eval_hist
+    return best_model, train_eval_hist, val_eval_hist, train_loss_hist, val_loss_hist
 
 # Test function here
 @torch.no_grad()
@@ -83,6 +115,15 @@ def test(model, test_dataset, evaluator, if_regression = False, verbose=False):
     verbose: bool
         Whether to print the test results
     '''
+
+    # give the evaluator function a name
+    try:
+        evaluator_name = evaluator.__name__
+    except AttributeError:
+        evaluator_name = evaluator.__class__.__name__
+    except:
+        evaluator_name = 'evaluator'
+
     X_test, y_test = test_dataset.tensors
     model.eval()
     outputs = model(X_test)
@@ -92,5 +133,5 @@ def test(model, test_dataset, evaluator, if_regression = False, verbose=False):
         y_pred = outputs.squeeze()
     test_res = evaluator(y_test, y_pred)
     if verbose == True:
-        print(f'Test {evaluator.__name__}: {test_res}')
+        print(f'Test {evaluator_name}: {test_res}')
     return test_res

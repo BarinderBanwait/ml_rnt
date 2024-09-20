@@ -112,6 +112,16 @@ def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6)):
     plt.title('Evaluation Metric by Epochs')
     plt.legend()  # Show legend to identify the lines
     plt.show()
+
+def plot_train_loss_hist(train_loss_hist, eval_loss_hist, size = (12, 6)):
+    plt.figure(figsize=size)
+    plt.plot(train_loss_hist, label='train loss')
+    plt.plot(eval_loss_hist, label='validation loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Loss by Epochs')
+    plt.legend()  # Show legend to identify the lines
+    plt.show()
     
 def sliced_data(df, lower_bound, upper_bound):
     # slice the dataset by the desired lowerbound and upperbound of conductors
