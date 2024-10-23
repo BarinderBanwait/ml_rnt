@@ -72,7 +72,22 @@ def array_round_to_nearest_square(arr):
 # step 2 : calculate the accuracy score
 def perfect_square_acc(y_true, y_pred):
     y_pred = array_round_to_nearest_square(y_pred)
-    return accuracy_score(y_true, y_pred)
+    try:
+        res = accuracy_score(y_true, y_pred)
+    except TypeError:
+        res = accuracy_score(y_true.cpu(), y_pred.cpu())
+    return res
+
+# define a nearest integer_accuracy_score function to evaluate the model:
+# step 1 : round y_pred to the nearest integer
+# step 2 : calculate the accuracy score
+def nearest_integer_acc(y_true, y_pred):
+    try:
+        y_pred = torch.round(y_pred)
+        res = torch.sum(y_pred.squeeze() == y_true) / len(y_true)
+    except TypeError:
+        res = accuracy_score(y_true, y_pred)
+    return res
 
 # split the data into training and test sets and use dataloaders to create batches
 def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_state=42, shuffle=True, if_regression=False, drop_last=True, if_standardize = False):
@@ -103,7 +118,7 @@ def prepare_data(data, label_col, device, test_size=0.2, batch_size=32, random_s
 
     return train_dataloader, val_dataset, test_dataset
 
-def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6)):
+def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6), title = '', show = True):
     plt.figure(figsize=size)
     plt.plot(train_eval_hist, label='train evaluation')
     plt.plot(val_eval_hist, label='validation evaluation')
@@ -111,9 +126,13 @@ def plot_train_eval_hist(train_eval_hist, val_eval_hist, size = (12, 6)):
     plt.ylabel('Evaluation Metric')
     plt.title('Evaluation Metric by Epochs')
     plt.legend()  # Show legend to identify the lines
-    plt.show()
-
-def plot_train_loss_hist(train_loss_hist, eval_loss_hist, size = (12, 6)):
+    plt.title(title)
+    # save the plot
+    plt.savefig(f'{title}.png')
+    if show:
+        plt.show()
+    
+def plot_train_loss_hist(train_loss_hist, eval_loss_hist, size = (12, 6), title = '', show = True):
     plt.figure(figsize=size)
     plt.plot(train_loss_hist, label='train loss')
     plt.plot(eval_loss_hist, label='validation loss')
@@ -121,7 +140,11 @@ def plot_train_loss_hist(train_loss_hist, eval_loss_hist, size = (12, 6)):
     plt.ylabel('Loss')
     plt.title('Loss by Epochs')
     plt.legend()  # Show legend to identify the lines
-    plt.show()
+    plt.title(title)
+    # save the plot
+    plt.savefig(f'{title}.png')
+    if show:
+        plt.show()
     
 def sliced_data(df, lower_bound, upper_bound):
     # slice the dataset by the desired lowerbound and upperbound of conductors
