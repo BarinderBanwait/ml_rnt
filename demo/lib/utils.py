@@ -86,7 +86,7 @@ def nearest_integer_acc(y_true, y_pred):
         y_pred = torch.round(y_pred)
         res = torch.sum(y_pred.squeeze() == y_true) / len(y_true)
     except TypeError:
-        res = accuracy_score(y_true, y_pred)
+        res = accuracy_score(y_true.cpu(), y_pred.cpu())
     return res
 
 # split the data into training and test sets and use dataloaders to create batches

@@ -75,13 +75,13 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
         if if_regression == True:
             outputs = outputs.squeeze()
         train_loss = loss_func(outputs, train_dataloader.dataset.tensors[1]).item()
-        train_loss_hist.append(train_loss)
+        train_loss_hist.append(train_loss.item())
         # validation loss
         outputs = model(val_dataset.tensors[0])
         if if_regression == True:
             outputs = outputs.squeeze()
         val_loss = loss_func(outputs, val_dataset.tensors[1]).item()
-        val_loss_hist.append(val_loss)
+        val_loss_hist.append(val_loss.item())
         # evaluation
         train_eval = test(model, train_dataloader.dataset, evaluator, if_regression = if_regression)
         val_eval = test(model, val_dataset, evaluator, if_regression = if_regression)
@@ -92,8 +92,8 @@ def train(model, train_dataloader, val_dataset, loss_func, evaluator, optimizer,
             best_epoch = epoch
         if verbose == True:
             print(f'Epoch {epoch+1}/{num_epochs}. Training {loss_func_name} : {train_loss:0.4f}, Validation {loss_func_name} : {val_loss:0.4f}. Training {evaluator_name}: {train_eval:0.4f}, Validation {evaluator_name}: {val_eval:0.4f}')
-        train_eval_hist.append(train_eval)
-        val_eval_hist.append(val_eval)
+        train_eval_hist.append(train_eval.item())
+        val_eval_hist.append(val_eval.item())
 
     # save the trained model locally
     model_path = Path("..") / "trained_models" / "model.pth"
@@ -131,7 +131,7 @@ def test(model, test_dataset, evaluator, if_regression = False, verbose=False):
         _, y_pred = torch.max(outputs.data, 1)
     else:
         y_pred = outputs.squeeze()
-    test_res = evaluator(y_test, y_pred)
+    test_res = evaluator(y_test.cpu(), y_pred.cpu())
     if verbose == True:
         print(f'Test {evaluator_name}: {test_res}')
     return test_res
