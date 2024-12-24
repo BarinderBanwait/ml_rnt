@@ -3,3 +3,6 @@
 
 # Ignore all data files
 data_files/*
+
+# But do not ignore the folder itself or a placeholder file
+!data_files/.gitkeep
