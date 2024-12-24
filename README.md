@@ -4,7 +4,7 @@ This is the codebase for the [paper](link) of the same name, by Angelica Babei, 
 
 ## How do I reproduce the results in your paper?
 
-You will first need the datafiles. These must be placed in a subdirectory called "sha" in the `data_files` folder. The data we have used for this project has been obtained from the LMFDB. For the reader's convenience, it may be downloaded from [here](link). We cannot have this in the github repo because it is far too large. The reader is encouraged to download these files and place them in the `sha` subdirectory of `data_files`.
+You will first need the datafiles. These must be placed in a subdirectory called "sha" in the `data_files` folder. The data we have used for this project has been obtained from the LMFDB. For the reader's convenience, it may be downloaded from [here](https://www.dropbox.com/scl/fo/gumbemoahrec5opot4nyo/AJt1wONoqi1fz850ncOolLY?rlkey=ply0vu4tfmq43tojnwnpy8mgm&e=3&st=hxn4h7i7&dl=0) and [here](https://drive.google.com/file/d/1XzcpjAoWE-EPbcgUOaWpvix11JgQDLl9/view?usp=sharing) (both are used in the notebooks, but this latter one is the more relevant one). We cannot have this in the github repo because it is far too large. The reader is encouraged to download these files and place them in the `sha` subdirectory of `data_files`.
 
 Once you've got the data files there, you will find all relevant code in the various `.ipynb` files in the `experiments` folder.
 
