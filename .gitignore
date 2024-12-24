@@ -7,5 +7,7 @@ data_files/*
 # But do not ignore the folder itself or a placeholder file
 !data_files/.gitkeep
 
+!data_files/sha/
+
 # But do not ignore the folder itself or a placeholder file
 !data_files/sha/.gitkeep
