@@ -1,6 +1,6 @@
 # Machine Learning Approaches to the Shafarevich-Tate Group of Elliptic Curves
 
-This is the codebase for the [paper](link) of the same name, by Angelica Babei, Barinder S. Banwait, AJ Fong, Xiaoyu Huang, and Deependra Singh.
+This is the codebase for the [paper](https://arxiv.org/abs/2412.18576) of the same name, by Angelica Babei, Barinder S. Banwait, AJ Fong, Xiaoyu Huang, and Deependra Singh.
 
 ## How do I reproduce the results in your paper?
 
